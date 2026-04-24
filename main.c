@@ -21,6 +21,7 @@ API
 INCLUDE FILES: main.h
 */
 #include "main.h"
+
 /*******************************************************************************
 * 
 * main.c - Entry function for student mark system
@@ -31,7 +32,7 @@ INCLUDE FILES: main.h
 * PARAMETERS:
 * N/A
 * 
-* GLOBALS: menuStdntTask
+* GLOBALS: N/A
 * 
 * RETURNS: lReturnFlag
 * 

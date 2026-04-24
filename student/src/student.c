@@ -11,7 +11,7 @@
 /*
 modification history
 --------------------
-17apr26, initial work
+24apr26, initial work
 */
 
 /*
@@ -21,7 +21,9 @@ INCLUDE FILES: student.h
 */
 #include "student.h"
 
-uint8_t ucCount = ZERO_INITIALIZATION;
+student *ststudentInfoTable = NULL;
+uint32_t ucCount = ZERO_INITIALIZATION;
+
 /*******************************************************************************
 * 
 * studentAdd - Function enter new student
@@ -31,8 +33,9 @@ uint8_t ucCount = ZERO_INITIALIZATION;
 * 
 * PARAMETERS: pstInfo
 * 
-* GLOBALS: menuStdntTask
-* 
+* GLOBALS: ucCount
+*          ststudentInfoTable
+*
 * RETURNS: lReturnFlag
 * 
 * ERRNO: N/A
@@ -43,14 +46,14 @@ bool studentAdd
     student* pstInfo
     )
     {
-        uint8_t ucIndex           = ZERO_INITIALIZATION;
+        uint8_t ucIndex   = ZERO_INITIALIZATION;
         student *stNewStd = (student*)malloc(sizeof(student));
-        bool lReturnFlag          = true;
+        bool lReturnFlag  = true;
         if(stNewStd != NULL)
         {
             strncpy((char *)stNewStd[ucCount].cName,(const char*)pstInfo->cName,
                 strlen(pstInfo->cName));
-            stNewStd[ucCount].uiRoll  = pstInfo->uiRoll;
+            stNewStd[ucCount].uiRoll   = pstInfo->uiRoll;
             stNewStd[ucCount].cStdAddr = (char *)malloc(strlen(pstInfo->cStdAddr));
             stNewStd[ucCount].cStdAddr = pstInfo->cStdAddr;
             for ( ; ucIndex < TOTAL_SUB; ucIndex++)
@@ -65,6 +68,7 @@ bool studentAdd
         }
         return lReturnFlag;
     }
+
 /*******************************************************************************
 * 
 * studentCalcAverage - Function to calculate the averge of the mark of student
@@ -75,7 +79,7 @@ bool studentAdd
 * PARAMETERS: pstInfo,
 *             pfAvg
 * 
-* GLOBALS: N/A
+* GLOBALS: ucCount, ststudentInfoTable
 * 
 * RETURNS: lReturnFlag
 * 
@@ -104,6 +108,7 @@ bool studentCalcAverage
         }
         return lReturnFlag;
     }
+
 /*******************************************************************************
 * 
 * studentCalcSum - Function to calculate the sum of the mark of a student
@@ -115,7 +120,7 @@ bool studentCalcAverage
 * PARAMETERS: pstInfo,
 *             pfAvg
 * 
-* GLOBALS: menuStdntTask
+* GLOBALS: ucCount, ststudentInfoTable
 * 
 * RETURNS: lReturnFlag
 * 
@@ -129,20 +134,24 @@ bool studentCalcSum
     )
     {
         uint8_t ucIndex = ZERO_INITIALIZATION;
-        *pulSum         = ZERO_INITIALIZATION;
         bool lReturnFlag= true;
         if(pstInfo == NULL || pulSum == NULL)
         {
             (void)printf("Invalid pointers\n");
             lReturnFlag = false;
         }
-        for(ucIndex = ZERO_INITIALIZATION; ucIndex < TOTAL_SUB; ucIndex++)
+        else
         {
-            *pulSum += pstInfo->uiSubMark[ucIndex];
+            *pulSum = ZERO_INITIALIZATION;
+            for(ucIndex = ZERO_INITIALIZATION; ucIndex < TOTAL_SUB; ucIndex++)
+            {
+                *pulSum += pstInfo->uiSubMark[ucIndex];
+            }
+            (void)printf("Sum = %u\n",*pulSum);
         }
-        (void)printf("Sum = %d\n",*pulSum);
         return lReturnFlag;
     }
+
 /*******************************************************************************
 * 
 * studentCalcGrades - Function calculate the grade of the student
@@ -153,7 +162,7 @@ bool studentCalcSum
 * PARAMETERS: pstInfo,
 *             pucSum
 * 
-* GLOBALS: N/A
+* GLOBALS: ucCount, ststudentInfoTable
 * 
 * RETURNS: lReturnFlag
 * 
@@ -198,8 +207,8 @@ bool studentCalcGrades
             lReturnFlag = false;
         }
         return lReturnFlag;
-        return true;
     }
+
 /*******************************************************************************
 * 
 * studentUpdateRank - Function to update the rank of student in the list
@@ -209,7 +218,7 @@ bool studentCalcGrades
 * 
 * PARAMETERS: N/A
 * 
-* GLOBALS: menuStdntTask
+* GLOBALS: ucCount, ststudentInfoTable
 * 
 * RETURNS: lReturnFlag
 * 
@@ -225,16 +234,15 @@ bool studentUpdateRank
         uint8_t ucInIndex  = ZERO_INITIALIZATION;
         uint8_t ucOutIndex = ZERO_INITIALIZATION;
         uint32_t uiRank    = RANK_ONE;
-        student ststudentInfoTable[ucCount];
         student stTempstudentInfo;
-        if (ucCount <= ZERO_INITIALIZATION)
+        if (ucCount == ZERO_INITIALIZATION)
         {
             lReturnFlag = false;
         }
         
-        for ( ; ucOutIndex < ucCount ; ucOutIndex++)
+        for (ucOutIndex = 0; ucOutIndex < ucCount ; ucOutIndex++)
         {
-            for ( ; ucInIndex < ucCount; ucInIndex++)
+            for (ucInIndex =ucOutIndex+1; ucInIndex < ucCount; ucInIndex++)
             {
                 if (ststudentInfoTable[ucOutIndex].uiSum < 
                     ststudentInfoTable[ucInIndex].uiSum)
@@ -265,6 +273,7 @@ bool studentUpdateRank
         }
         return lReturnFlag;
     }
+
 /*******************************************************************************
 * 
 * studentGetCount - Function to get the count of students in the list 
@@ -275,7 +284,7 @@ bool studentUpdateRank
 * 
 * PARAMETERS: pulCount
 *            
-* GLOBALS: N/A
+* GLOBALS: ucCount, ststudentInfoTable
 * 
 * RETURNS: lReturnFlag
 * 
@@ -292,9 +301,13 @@ bool studentGetCount
         {
             lReturnFlag = false;
         }
-        *pulCount = ucCount;
+        else
+        {
+            *pulCount = ucCount;
+        } 
         return lReturnFlag;
     }
+
 /*******************************************************************************
 * 
 * studentGetAvgMarksOfSubjects - Function to get average mark of students
@@ -304,7 +317,7 @@ bool studentGetCount
 * 
 * PARAMETERS: N/A
 *            
-* GLOBALS: N/A
+* GLOBALS: ucCount, ststudentInfoTable
 * 
 * RETURNS: lReturnFlag
 * 
@@ -327,6 +340,7 @@ bool studentGetAvgMarksOfSubjects
         }
         return lReturnFlag;
     }
+
 /*******************************************************************************
 * 
 * studentDeleteByName - Function to delete the student record based on name
@@ -337,7 +351,7 @@ bool studentGetAvgMarksOfSubjects
 * 
 * PARAMETERS: pucName
 *            
-* GLOBALS: N/A
+* GLOBALS: ucCount, ststudentInfoTable
 * 
 * RETURNS: lReturnFlag
 * 
@@ -352,16 +366,18 @@ bool studentDeleteByName
         uint8_t ucIndex       = ZERO_INITIALIZATION;
         uint32_t uiPucNamelen = ZERO_INITIALIZATION;
         uint8_t ucDelIndex    = ZERO_INITIALIZATION;
+        uint32_t uiStrRtn     = ZERO_INITIALIZATION;
         bool lReturnFlag      = true;
         bool lNameFound       = false;
-        student ststudentInfoTable[ucCount];
-        if (pucName != NULL || *pucName != '\0')
+        //student ststudentInfoTable[ucCount];
+        if (pucName != NULL && *pucName != '\0')
         {
             uiPucNamelen = strlen((const char*)pucName);
             for (; ucIndex < ucCount; ucIndex++)
             {
-                if (strncmp((const char*)ststudentInfoTable[ucIndex].cName, 
-                    (const char*)pucName, uiPucNamelen)==ZERO_INITIALIZATION)
+                uiStrRtn = strncmp((const char*)ststudentInfoTable[ucIndex].cName, 
+                    (const char*)pucName, uiPucNamelen);
+                if (uiStrRtn ==ZERO_INITIALIZATION)
                     {
                         lNameFound = true;
                         for (ucDelIndex = ucIndex; ucDelIndex < ucCount; 
@@ -386,6 +402,7 @@ bool studentDeleteByName
         }
         return lReturnFlag;
     }
+
 /*******************************************************************************
 * 
 * studentDeleteByRoll - Function to delete the student record based on roll no:
@@ -396,7 +413,7 @@ bool studentDeleteByName
 * 
 * PARAMETERS: ulRoll
 *            
-* GLOBALS: N/A
+* GLOBALS: ucCount, ststudentInfoTable
 * 
 * RETURNS: lReturnFlag
 * 
@@ -408,9 +425,41 @@ bool  studentDeleteByRoll
     uint32_t ulRoll
     )
     {
-        
-        return true;
+        uint8_t ucIndex    = ZERO_INITIALIZATION;
+        uint8_t ucDelIndex = ZERO_INITIALIZATION;
+        bool lReturnFlag   = true;
+        bool lRollnoFound  = false;
+        if (ulRoll <= 0 )
+        {
+            for (ucIndex    = ZERO_INITIALIZATION; ucIndex < ucCount; ucIndex++)
+            {
+                if (ststudentInfoTable[ucIndex].uiRoll == ulRoll)
+                {
+                    lRollnoFound = true;
+                    for (ucDelIndex = ZERO_INITIALIZATION; 
+                        ucDelIndex < (ucCount - 1); ucDelIndex++)
+                    {
+                        ststudentInfoTable[ucDelIndex] =
+                            ststudentInfoTable[ucDelIndex + 1];
+                    }
+                    ucCount--;    
+                }
+                
+            }  
+            if (!lRollnoFound)
+            {
+                printf ("Roll number not found\n");
+                lReturnFlag = false;
+            }
+              
+        }
+        else
+        {
+            lReturnFlag = false;
+        }
+        return lReturnFlag;
     }
+
 /*******************************************************************************
 * 
 * studentDeleteAll - Function to delete all the student record 
@@ -421,7 +470,7 @@ bool  studentDeleteByRoll
 * 
 * PARAMETERS: N/A
 *            
-* GLOBALS: N/A
+* GLOBALS: ucCount, ststudentInfoTable
 * 
 * RETURNS: lReturnFlag
 * 
@@ -433,6 +482,16 @@ bool studentDeleteAll
     void
     )
     {
-        (void)printf("inside delte all\n");
-        return true;
+        bool lReturnFlag = true;
+        //student ststudentInfoTable[ucCount];
+        if (ststudentInfoTable != NULL)
+        {
+            memset (ststudentInfoTable, 0, ucCount*sizeof(student));
+            ucCount = ZERO_INITIALIZATION;
+        }
+        else
+        {
+            lReturnFlag = false;
+        }   
+        return lReturnFlag;
     }

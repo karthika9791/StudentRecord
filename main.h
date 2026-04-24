@@ -1,4 +1,4 @@
-//*************************** String Manipulation ******************************
+//************************** Student Record System *****************************
 //  Copyright (c) 2026 Trenser Technology Solutions 
 //  All Rights Reserved 
 //****************************************************************************** 
@@ -8,8 +8,8 @@
 //           used to call the API for student system
 //
 //******************************************************************************
-#ifndef _MAIN_H_
-#define _MAIN_H_
+#ifndef _INCmainh
+#define _INCmainh
 
 #include <stdint.h>
 #include <stdlib.h>

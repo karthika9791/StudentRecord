@@ -11,7 +11,7 @@
 /*
 modification history
 --------------------
-17apr26, initial work
+23apr26, initial work
 */
 
 /*
@@ -24,6 +24,9 @@ INCLUDE FILES: menu.h
 
 #define BUFFER_SIZE          (100)
 #define INPUT_SIZE           (10)
+
+student *stStudent = NULL;
+
 /*******************************************************************************
 * 
 * menuGetUserChoice - Display various user input options
@@ -32,12 +35,12 @@ INCLUDE FILES: menu.h
 * The function will display user input and calls the corresponding menu function
 * in the file
 * 
-* PARAMETERS
+* PARAMETERS:
 * N/A
 * 
-* GLOBALS: menuStdntTask
+* GLOBALS: stStudent
 * 
-* RETURNS: lReturnFlag
+* RETURNS: ucInpNum
 * 
 * ERRNO: N/A
 *
@@ -46,11 +49,11 @@ static uint8_t menuGetUserChoice
     (
     void
     )
-    {
-        char cBuffer[BUFFER_SIZE];
+    {    
         uint8_t ucInpNum = ZERO_INITIALIZATION;
         char * endPtr    = NULL;
-        errno = ZERO_INITIALIZATION;
+        errno            = ZERO_INITIALIZATION;
+        char cBuffer[BUFFER_SIZE];
         if (fgets(cBuffer, sizeof(cBuffer),stdin)==NULL)
         {
             (void)printf("fgets failed\n");
@@ -62,6 +65,7 @@ static uint8_t menuGetUserChoice
         }
         return ucInpNum;        
     }
+
 /*******************************************************************************
 * 
 * menuGetUserChoice - Display various user input options
@@ -70,17 +74,18 @@ static uint8_t menuGetUserChoice
 * The function will display user input and calls the corresponding menu function
 * in the file
 * 
-* PARAMETERS
-* N/A
+* PARAMETERS:*dest
+*            size
+*            *src
 * 
-* GLOBALS: menuStdntTask
+* GLOBALS: stStudent
 * 
 * RETURNS: lReturnFlag
 * 
 * ERRNO: N/A
 *
 */
-bool menuInputString(uint8_t *dest, size_t size, const char *src)
+static bool menuInputString(uint8_t *dest, size_t size, const char *src)
 {
     bool lReturnFlag = true;
     if (dest == NULL || size == 0)
@@ -109,7 +114,7 @@ bool menuInputString(uint8_t *dest, size_t size, const char *src)
 * PARAMETERS
 * N/A
 * 
-* GLOBALS: menuStdntTask
+* GLOBALS: stStudent
 * 
 * RETURNS: lReturnFlag
 * 
@@ -121,30 +126,31 @@ bool menuMain
     void
     )
     {
-        (void)printf("Enter the option:\n");
         uint8_t ucInpNum = ZERO_INITIALIZATION;
         uint8_t ucIndex  = ZERO_INITIALIZATION;
         bool lReturnFlag = true;
+        (void)printf("Enter the option:\n");
         do
         {
             (void)printf("1. Student Overview\n2. Add Student\n");
             (void)printf("3. List Student\n4. Delete Student\n5. Exit\n");
             ucInpNum = menuGetUserChoice();
-            if (ucInpNum< STD_OVERVIEW || ucInpNum > STD_EXIT)
+            if (ucInpNum< STUDENT_OVERVIEW || ucInpNum > STUDENT_EXIT)
             {
                 (void)printf("Invalid option\n");
                 lReturnFlag = false;
             }
-            for (ucIndex = ZERO_INITIALIZATION; ucIndex < STD_DELETE; ucIndex++)
+            for (ucIndex =ZERO_INITIALIZATION;ucIndex <STUDENT_DELETE;ucIndex++)
             {
                 if (ucInpNum == pstStudentMenu[ucIndex].eStdOptn)
                 {
                     pstStudentMenu[ucIndex].pMenuFucnHandler();
                 }   
             }
-        }while (STD_EXIT != ucInpNum);
+        }while (STUDENT_EXIT != ucInpNum);
         return lReturnFlag;
     }
+
 /*******************************************************************************
 * 
 * menuStudentOverview - Displays number of students, average mark of the class
@@ -152,12 +158,12 @@ bool menuMain
 * DESCRIPTION
 * The function calls the corresponding function to display the student info
 * 
-* PARAMETERS
+* PARAMETERS:
 * N/A
 * 
-* GLOBALS: N/A
+* GLOBALS: stStudent
 * 
-* RETURNS: N/A
+* RETURNS: lReturnFlag
 * 
 * ERRNO: N/A
 *
@@ -167,28 +173,29 @@ static bool menuStudentOverview
     void
     )
     {
-        printf("Inside student overview\n");
         uint8_t ucIndex     = ZERO_INITIALIZATION;
         uint32_t uiTotalSum = ZERO_INITIALIZATION;
         float fAvgTotal     = ZERO_INITIALIZATION;
         bool lReturnFlag    = true;
-        student *pstStudent = NULL;
+        student *pstStudent = (student *)calloc(ucCount,sizeof(student));
         (void)printf("Total Students: %d\n",ucCount);  
-        if (ucCount <= ZERO_INITIALIZATION)
+        if (ucCount == ZERO_INITIALIZATION)
         {
             (void)printf("Average = 0\n");
         }
         else
         {
-            for ( ; ucIndex < ucCount; ucIndex++)
+            for (ucIndex = ZERO_INITIALIZATION; ucIndex < ucCount; ucIndex++)
             {
                 uiTotalSum += pstStudent[ucIndex].uiSum;
             }
             fAvgTotal = (float)uiTotalSum/(float)ucCount;
-            (void)printf("Average = %f\n",fAvgTotal);
+            (void)printf("Average = %.2f\n",fAvgTotal);
         }
+        free(pstStudent);
         return lReturnFlag; 
     }
+
 /*******************************************************************************
 * 
 * menuAddStudent - Function to add student to the list
@@ -200,9 +207,9 @@ static bool menuStudentOverview
 * PARAMETERS
 * N/A
 * 
-* GLOBALS: N/A
+* GLOBALS: stStudent
 * 
-* RETURNS: N/A
+* RETURNS: lReturnFlag
 * 
 * ERRNO: N/A
 *
@@ -212,14 +219,17 @@ static bool menuAddStudent
     void
     )
     {
-        student *stStudent = (student*)malloc(sizeof(student));
-        char cBuffer[BUFFER_SIZE];
-        bool lReturnFlag = true;
-        uint32_t ucIndex  = ZERO_INITIALIZATION;
-        (void)printf("Enter Name:\n");
-        lReturnFlag = menuInputString((uint8_t*)stStudent->cName, STD_NAME_SIZE, 
+        student *stStudent        = (student*)malloc(sizeof(student));
+        char cBuffer[BUFFER_SIZE] = {0};
+        bool lReturnFlag          = true;
+        uint32_t ucIndex          = ZERO_INITIALIZATION;
+        (void)printf("Enter Name:\n"); 
+        menuInputString((uint8_t*)stStudent->cName, STUDENT_NAME_SIZE, 
             "Enter name:");
+        (void)printf("Enter the roll no:\n");
         stStudent->uiRoll = menuGetUserChoice();
+        menuInputString((uint8_t*)cBuffer, STUDENT_NAME_SIZE, 
+            "Enter address:");
         stStudent->cStdAddr = (char *)malloc(strlen(cBuffer)+1);
         if (stStudent->cStdAddr == NULL)
         {
@@ -230,19 +240,19 @@ static bool menuAddStudent
         {
             strncpy(stStudent->cStdAddr,cBuffer,strlen(cBuffer)+1);
         }
-        for(; ucIndex < TOTAL_SUB; ucIndex++)
-        {
-            (void)printf("Enter mark of each subject:\n");
+        (void)printf("Enter mark of each subject:\n");
+        for(ucIndex = 0; ucIndex < TOTAL_SUB; ucIndex++)
+        {   
             stStudent->uiSubMark[ucIndex] = menuGetUserChoice();
         }
         studentAdd (stStudent);
         studentCalcAverage (stStudent, &stStudent->fStdAvg);
         studentCalcSum (stStudent, &stStudent->uiSum);
         studentCalcGrades (stStudent, stStudent->ucGrade);
-        studentUpdateRank ();
         ucCount++;
         return lReturnFlag;  
     }
+
 /*******************************************************************************
 * 
 * menuListStudent - Function to print students name based on Student List
@@ -253,7 +263,7 @@ static bool menuAddStudent
 * PARAMETERS:
 * N/A
 * 
-* GLOBALS: N/A
+* GLOBALS: stStudent
 * 
 * RETURNS: lReturnFlag
 * 
@@ -266,26 +276,36 @@ static bool menuListStudent
     )
     {
         uint32_t uiInpNum = ZERO_INITIALIZATION;
-        uint32_t uiIndex  = ZERO_INITIALIZATION;
         bool lReturnFlag  = true;
         (void)printf("LIST STUDENT MENU\n");
         (void)printf("1. Search by name\n2. Sort by name\n3. Sort by Roll no:");
         (void)printf("\n4. Sort by Rank\n");
-        uiInpNum = menuGetUserChoice();
-        if(uiInpNum < STD_SRCH_NAME && uiInpNum > STD_SRT_RANK)
+        uiInpNum = menuGetUserChoice() + SEARCH_OFFSET;
+        if(uiInpNum < STUDENT_SRCH_NAME || uiInpNum > STUDENT_SRT_RANK)
         {
             (void)printf("Choice out of range\n");
             lReturnFlag = false;
         }
-        for(uiIndex = STD_SRCH_NAME; uiIndex <= STD_SRT_RANK; uiIndex++)
+        switch (uiInpNum)
         {
-            if(uiInpNum == uiIndex)
-            {
-                pstStudentMenu[uiIndex].pMenuFucnHandler();
-            }
+            case STUDENT_SRCH_NAME:
+                menuListSearchByName();
+                break;
+            case STUDENT_SRT_NAME:
+                menuListSortByName();
+                break;
+            case STUDENT_SRT_ROLL:
+                menuListSortByRoll();
+                break;
+            case STUDENT_SRT_RANK:
+                menuListSortByRank();
+                break;
+            default:
+                break;
         }
         return lReturnFlag;
     }
+
 /*******************************************************************************
 * 
 * menuDeleteStudent - Function to delete student record
@@ -297,14 +317,13 @@ static bool menuListStudent
 * PARAMETERS:
 * N/A
 * 
-* GLOBALS: N/A
+* GLOBALS: stStudent
 * 
 * RETURNS: lReturnFlag
 * 
 * ERRNO: N/A
 *
 */
-
 static bool menuDeleteStudent
     (
     void
@@ -316,21 +335,26 @@ static bool menuDeleteStudent
         (void)printf("DELETE STUDENT MENU\n");
         (void)printf("1. Delete by name\n2. Delete by Roll no:");
         (void)printf("\n3. Delete all\n");
-        uiInpNum = menuGetUserChoice() +  DLT_OFFSET;
-        if(uiInpNum < STD_DLT_NAME || uiInpNum > STD_DLT_ALL)
+        uiInpNum = menuGetUserChoice();
+        uiInpNum += DLT_OFFSET;
+        if(uiInpNum < STUDENT_DLT_NAME || uiInpNum > STUDENT_DLT_ALL)
         {
             (void)printf("Choice out of range\n");
             lReturnFlag = false;
         }
-        for(uiIndex = STD_DLT_NAME; uiIndex <= STD_DLT_ALL; uiIndex++)
+        else
         {
-            if(uiInpNum == uiIndex)
+            for(uiIndex = STUDENT_DLT_NAME;uiIndex < STUDENT_DLT_ALL;uiIndex++)
             {
-                pstStudentMenu[uiIndex].pMenuFucnHandler();
+                if(uiInpNum == uiIndex)
+                {
+                    pstStudentMenu[uiIndex].pMenuFucnHandler();
+                }
             }
         }
         return lReturnFlag;
     }
+
 /*******************************************************************************
 * 
 * menuListSearchByName - Function to search by name
@@ -341,35 +365,33 @@ static bool menuDeleteStudent
 * PARAMETERS:
 * N/A
 * 
-* GLOBALS: N/A
+* GLOBALS: stStudent
 * 
 * RETURNS: lReturnFlag
 * 
 * ERRNO: N/A
 *
 */
-
 static bool menuListSearchByName
     (
     void
     )
     {
-        bool lReturnFlag = true;
-        uint32_t ucIndex = ZERO_INITIALIZATION;
-        uint8_t cInpName[STD_NAME_SIZE];
-        uint8_t uiStrcmp   = ZERO_INITIALIZATION;
-        student stStudent[ucCount];
+        bool lReturnFlag                    = true;
+        uint32_t ucIndex                    = ZERO_INITIALIZATION;
+        uint8_t cInpName[STUDENT_NAME_SIZE] = {0};
+        uint8_t uiStrcmp                    = ZERO_INITIALIZATION;
         lReturnFlag = menuInputString(cInpName, sizeof(cInpName),"Enter name:");
-        for(; ucIndex<ucCount; ucIndex++)
+        for(ucIndex = 0; ucIndex < ucCount; ucIndex++)
         {
             uiStrcmp = strncmp(stStudent[ucIndex].cName, (const char*)cInpName, 
-                (strlen((const char*)cInpName)+1));
+               (strlen((const char*)cInpName)));
             if (uiStrcmp == ZERO_INITIALIZATION)
             {
                 (void)printf("%s\n",stStudent[ucIndex].cName);
-                (void)printf("%d\n",stStudent[ucIndex].uiRoll);
+                (void)printf("%u\n",stStudent[ucIndex].uiRoll);
                 (void)printf("%.2f\n",stStudent[ucIndex].fStdAvg);
-                (void)printf("%d\n",stStudent[ucIndex].uiRank);
+                (void)printf("%u\n",stStudent[ucIndex].uiRank);
                 (void)printf("%s\n",stStudent[ucIndex].cStdAddr);
             }
             else
@@ -379,6 +401,7 @@ static bool menuListSearchByName
         }
         return lReturnFlag;
     }
+
 /*******************************************************************************
 * 
 * menuListSortByName - Function to sort bsed on name of the student
@@ -389,7 +412,7 @@ static bool menuListSearchByName
 * PARAMETERS:
 * N/A
 * 
-* GLOBALS: ucStdntCnt
+* GLOBALS: stStudent
 * 
 * RETURNS: lReturnFlag
 * 
@@ -405,23 +428,22 @@ static bool menuListSortByName
         uint32_t ucOutIndex = ZERO_INITIALIZATION;
         uint8_t uiStrcmp   = ZERO_INITIALIZATION;
         uint32_t ucInIndex = ucOutIndex + 1;
-        student stStudent[ucCount];
         if(ucCount == ZERO_INITIALIZATION)
         {
             printf("No students added\n");
         }
         else
         {
-            for(; ucOutIndex < ucCount; ucOutIndex++)
+            for(ucOutIndex = 0; ucOutIndex < ucCount; ucOutIndex++)
             {
-                for( ;ucInIndex<ucCount; ucInIndex++)
+                for(ucInIndex = 0 ;ucInIndex<ucCount; ucInIndex++)
                 {
                     uiStrcmp = strncmp(stStudent[ucOutIndex].cName,
                         stStudent[ucInIndex].cName,
                         strlen(stStudent[ucOutIndex].cName));
                     if(uiStrcmp > ZERO_INITIALIZATION)
                     {
-                        student stTemp          = stStudent[ucOutIndex];
+                        student stTemp        = stStudent[ucOutIndex];
                         stStudent[ucOutIndex] = stStudent[ucInIndex];
                         stStudent[ucInIndex]  = stTemp;
                     } 
@@ -434,7 +456,7 @@ static bool menuListSortByName
             for(ucOutIndex=ZERO_INITIALIZATION; ucOutIndex < ucCount;
                 ucOutIndex++)
             {
-                (void)printf("%s\nRoll: %d\nRank: %d\n",
+                (void)printf("%s\nRoll: %u\nRank: %u\n",
                     stStudent[ucOutIndex].cName,
                     stStudent[ucOutIndex].uiRoll,
                     stStudent[ucOutIndex].uiRank);
@@ -442,6 +464,7 @@ static bool menuListSortByName
         }
         return lReturnFlag;
     }
+
 /*******************************************************************************
 * 
 * menuListSortByRoll - Function to sort bsed on roll number
@@ -452,7 +475,7 @@ static bool menuListSortByName
 * PARAMETERS:
 * N/A
 * 
-* GLOBALS: ucStdntCnt
+* GLOBALS: stStudent
 * 
 * RETURNS: lReturnFlag
 * 
@@ -465,19 +488,18 @@ bool menuListSortByRoll
     void
     )
     {
-        bool lReturnFlag = true;
+        bool lReturnFlag    = true;
         uint32_t ucOutIndex = ZERO_INITIALIZATION;
-        uint32_t ucInIndex = ucOutIndex + 1;
-        student stStudent[ucCount];
+        uint32_t ucInIndex  = ucOutIndex + 1;
         if(ucCount == ZERO_INITIALIZATION)
         {
-            printf("No students added\n");
+            (void)printf("No students added\n");
         }
         else
         {
-            for(; ucOutIndex < ucCount; ucOutIndex++)
+            for(ucOutIndex = 0; ucOutIndex < ucCount; ucOutIndex++)
             {
-                for( ;ucInIndex<ucCount; ucInIndex++)
+                for(ucInIndex = 0;ucInIndex<ucCount; ucInIndex++)
                 {
                     if(stStudent[ucOutIndex].uiRoll>stStudent[ucInIndex].uiRoll)
                     {
@@ -491,10 +513,9 @@ bool menuListSortByRoll
                     }  
                 }
             }
-            for(ucOutIndex=ZERO_INITIALIZATION; ucOutIndex < ucCount;
-                ucOutIndex++)
+            for(ucOutIndex = 0; ucOutIndex < ucCount; ucOutIndex++)
             {
-                (void)printf("%s\nRoll: %d\nRank: %d\n",
+                (void)printf("%s\nRoll: %u\nRank: %u\n",
                     stStudent[ucOutIndex].cName,
                     stStudent[ucOutIndex].uiRoll,
                     stStudent[ucOutIndex].uiRank);
@@ -502,6 +523,7 @@ bool menuListSortByRoll
         }
         return lReturnFlag;
     }
+
 /*******************************************************************************
 * 
 * menuListSortByRank - Function to sort bsed on rank
@@ -512,7 +534,7 @@ bool menuListSortByRoll
 * PARAMETERS:
 * N/A
 * 
-* GLOBALS: ucStdntCnt
+* GLOBALS: stStudent
 * 
 * RETURNS: lReturnFlag
 * 
@@ -524,19 +546,18 @@ bool menuListSortByRank
     void
     )
     {
-        bool lReturnFlag = true;
+        bool lReturnFlag    = true;
         uint32_t ucOutIndex = ZERO_INITIALIZATION;
-        uint32_t ucInIndex = ucOutIndex + 1;
-        student stStudent[ucCount];
+        uint32_t ucInIndex  = ucOutIndex + 1;
         if(ucCount == ZERO_INITIALIZATION)
         {
-            printf("No students added\n");
+            (void)printf("No students added\n");
         }
         else
         {
-            for(; ucOutIndex < ucCount; ucOutIndex++)
+            for(ucOutIndex = 0; ucOutIndex < ucCount; ucOutIndex++)
             {
-                for( ;ucInIndex<ucCount; ucInIndex++)
+                for( ucInIndex = 0;ucInIndex<ucCount; ucInIndex++)
                 {
                     if(stStudent[ucOutIndex].uiRank>stStudent[ucInIndex].uiRank)
                     {
@@ -550,10 +571,9 @@ bool menuListSortByRank
                     }  
                 }
             }
-            for(ucOutIndex=ZERO_INITIALIZATION; ucOutIndex < ucCount;
-                ucOutIndex++)
+            for( ucOutIndex = 0; ucOutIndex < ucCount; ucOutIndex++)
             {
-                (void)printf("%s\nRoll: %d\nRank: %d\n",
+                (void)printf("%s\nRoll: %u\nRank: %u\n",
                     stStudent[ucOutIndex].cName,
                     stStudent[ucOutIndex].uiRoll,
                     stStudent[ucOutIndex].uiRank);
@@ -561,6 +581,7 @@ bool menuListSortByRank
         }
         return lReturnFlag;
     }
+
 /*******************************************************************************
 * 
 * menuDeleteByName - Function to delete student record based on Name
@@ -572,22 +593,21 @@ bool menuListSortByRank
 * PARAMETERS:
 * N/A
 * 
-* GLOBALS: N/A
+* GLOBALS: stStudent
 * 
 * RETURNS: lReturnFlag
 * 
 * ERRNO: N/A
 *
 */
-
 bool menuDeleteByName
     (
     void
     )
     {
         bool lReturnFlag = true;
-        uint8_t cInpName[STD_NAME_SIZE];
-        lReturnFlag = menuInputString(cInpName, STD_NAME_SIZE, "Enter name");
+        uint8_t cInpName[STUDENT_NAME_SIZE] = {0};
+        lReturnFlag = menuInputString(cInpName,STUDENT_NAME_SIZE, "Enter name");
         if (lReturnFlag == true)
         {
             lReturnFlag = studentDeleteByName(cInpName);
@@ -602,6 +622,7 @@ bool menuDeleteByName
         }
         return lReturnFlag;
     }
+
 /*******************************************************************************
 * 
 * menuDeleteByRoll - Function to delete student record based on Roll No:
@@ -613,14 +634,13 @@ bool menuDeleteByName
 * PARAMETERS:
 * N/A
 * 
-* GLOBALS: N/A
+* GLOBALS: stStudent
 * 
 * RETURNS: lReturnFlag
 * 
 * ERRNO: N/A
 *
 */
-
 bool menuDeleteByRoll
     (
     void
@@ -629,7 +649,7 @@ bool menuDeleteByRoll
         bool lReturnFlag  = true;
         uint8_t uiInpRoll = ZERO_INITIALIZATION;
         uiInpRoll         = menuGetUserChoice();
-        if (uiInpRoll >= ZERO_INITIALIZATION)
+        if (uiInpRoll != ZERO_INITIALIZATION)
         {
             lReturnFlag = studentDeleteByRoll(uiInpRoll);
             if(lReturnFlag == false)
@@ -644,6 +664,7 @@ bool menuDeleteByRoll
         return lReturnFlag;
 
     }
+
 /*******************************************************************************
 * 
 * menuDeleteAll - Function to delete all the student record 
@@ -654,14 +675,13 @@ bool menuDeleteByRoll
 * PARAMETERS:
 * N/A
 * 
-* GLOBALS: N/A
+* GLOBALS: stStudent
 * 
 * RETURNS: lReturnFlag
 * 
 * ERRNO: N/A
 *
 */
-
 bool menuDeleteAll
     (
     void
@@ -678,18 +698,5 @@ bool menuDeleteAll
             (void)printf("Unable to delete all students record\n");
         }
         return lReturnFlag;
-        /*if (ucCount == ZERO_INITIALIZATION)
-        {
-            (void)printf("No students record\n");
-        }
-        for ( ; ucIndex < ucCount; ucIndex++)
-        {
-            if (stStudent[ucIndex].cStdAddr != NULL)
-            {
-                free(stStudent[ucIndex].cStdAddr);
-                stStudent[ucIndex].cStdAddr = NULL;
-            }
-            
-        }*/
     }
 
