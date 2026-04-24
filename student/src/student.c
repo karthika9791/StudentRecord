@@ -43,8 +43,27 @@ bool studentAdd
     student* pstInfo
     )
     {
-        //add the structure inside the student info table
-        return true;
+        uint8_t ucIndex           = ZERO_INITIALIZATION;
+        student *stNewStd = (student*)malloc(sizeof(student));
+        bool lReturnFlag          = true;
+        if(stNewStd != NULL)
+        {
+            strncpy((char *)stNewStd[ucCount].cName,(const char*)pstInfo->cName,
+                strlen(pstInfo->cName));
+            stNewStd[ucCount].uiRoll  = pstInfo->uiRoll;
+            stNewStd[ucCount].cStdAddr = (char *)malloc(strlen(pstInfo->cStdAddr));
+            stNewStd[ucCount].cStdAddr = pstInfo->cStdAddr;
+            for ( ; ucIndex < TOTAL_SUB; ucIndex++)
+            {
+                stNewStd->uiSubMark[ucIndex] = pstInfo->uiSubMark[ucIndex];
+            }
+            ucCount++;
+        }
+        else
+        {
+            lReturnFlag = false;
+        }
+        return lReturnFlag;
     }
 /*******************************************************************************
 * 
@@ -70,7 +89,20 @@ bool studentCalcAverage
     )
     {
         //calculate the average mark of all students
-        return true;
+        uint32_t ulSum = ZERO_INITIALIZATION;
+        bool lReturnFlag = true;
+        lReturnFlag = studentCalcSum(pstInfo, &ulSum);
+        if (lReturnFlag == true)
+        {
+            *pfAvg = (float)ulSum/(float)TOTAL_SUB;
+            (void)printf("Average = %f\n",*pfAvg);
+        }
+        else
+        {
+            (void)printf("unable to calculate average\n");
+            lReturnFlag = false;
+        }
+        return lReturnFlag;
     }
 /*******************************************************************************
 * 
@@ -96,8 +128,20 @@ bool studentCalcSum
     uint32_t* pulSum
     )
     {
-        //calculate the sum of all students
-        return true;
+        uint8_t ucIndex = ZERO_INITIALIZATION;
+        *pulSum         = ZERO_INITIALIZATION;
+        bool lReturnFlag= true;
+        if(pstInfo == NULL || pulSum == NULL)
+        {
+            (void)printf("Invalid pointers\n");
+            lReturnFlag = false;
+        }
+        for(ucIndex = ZERO_INITIALIZATION; ucIndex < TOTAL_SUB; ucIndex++)
+        {
+            *pulSum += pstInfo->uiSubMark[ucIndex];
+        }
+        (void)printf("Sum = %d\n",*pulSum);
+        return lReturnFlag;
     }
 /*******************************************************************************
 * 
@@ -123,6 +167,37 @@ bool studentCalcGrades
     )
     {
         //calculate grades based on mark
+        bool lReturnFlag = true;
+        if ((pucSum != NULL) && (pstInfo != NULL))
+        {
+            switch (*pucSum /TOTAL_SUB)
+            {
+            case 10:
+            case 9:
+                printf("A\n");
+                break;
+            case 8:
+                printf("B\n");
+                break;
+            case 7:
+                printf("C\n");
+                break;
+            case 6:
+                printf("D\n");
+                break;
+            case 5:
+                printf("E\n");
+                break;
+            default:
+                printf("F\n");
+                break;
+            }
+        }
+        else
+        {
+            lReturnFlag = false;
+        }
+        return lReturnFlag;
         return true;
     }
 /*******************************************************************************
@@ -146,8 +221,49 @@ bool studentUpdateRank
     void
     )
     {
-        //update rank based on marks
-        return true;
+        bool lReturnFlag   = true;
+        uint8_t ucInIndex  = ZERO_INITIALIZATION;
+        uint8_t ucOutIndex = ZERO_INITIALIZATION;
+        uint32_t uiRank    = RANK_ONE;
+        student ststudentInfoTable[ucCount];
+        student stTempstudentInfo;
+        if (ucCount <= ZERO_INITIALIZATION)
+        {
+            lReturnFlag = false;
+        }
+        
+        for ( ; ucOutIndex < ucCount ; ucOutIndex++)
+        {
+            for ( ; ucInIndex < ucCount; ucInIndex++)
+            {
+                if (ststudentInfoTable[ucOutIndex].uiSum < 
+                    ststudentInfoTable[ucInIndex].uiSum)
+                {
+                    stTempstudentInfo = ststudentInfoTable[ucOutIndex];
+                    ststudentInfoTable[ucOutIndex] = 
+                        ststudentInfoTable[ucInIndex];
+                    ststudentInfoTable[ucInIndex] = stTempstudentInfo;
+                }
+                
+            }   
+        }
+        ststudentInfoTable[ZERO_INITIALIZATION].uiRank = uiRank;
+        for (ucOutIndex = ZERO_INITIALIZATION; ucOutIndex < ucCount; 
+            ucOutIndex++)
+        {
+            if (ststudentInfoTable[ucOutIndex].uiSum ==
+                ststudentInfoTable[ucOutIndex + RANK_ONE].uiSum)
+            {
+                ststudentInfoTable[ucOutIndex].uiRank = uiRank;
+            }
+            else
+            {
+                uiRank = ucOutIndex + RANK_ONE;
+                ststudentInfoTable[ucOutIndex].uiRank = uiRank;
+            }
+            
+        }
+        return lReturnFlag;
     }
 /*******************************************************************************
 * 
@@ -171,8 +287,13 @@ bool studentGetCount
     uint32_t* pulCount
     )
     {
-        //get the total count of students
-        return true;
+        bool lReturnFlag = true;
+        if(pulCount == NULL)
+        {
+            lReturnFlag = false;
+        }
+        *pulCount = ucCount;
+        return lReturnFlag;
     }
 /*******************************************************************************
 * 
@@ -195,8 +316,16 @@ bool studentGetAvgMarksOfSubjects
     uint8_t* pucAvgMarks
     )
     {
-        //get average marks of each subjects
-        return true;
+        bool lReturnFlag = true;
+        if(pucAvgMarks == NULL)
+        {
+            lReturnFlag = false;
+        }
+        else
+        {
+            (void)printf("Average of subjects: %d\n",*pucAvgMarks);
+        }
+        return lReturnFlag;
     }
 /*******************************************************************************
 * 
@@ -220,7 +349,42 @@ bool studentDeleteByName
     uint8_t* pucName
     )
     {
-        return true;
+        uint8_t ucIndex       = ZERO_INITIALIZATION;
+        uint32_t uiPucNamelen = ZERO_INITIALIZATION;
+        uint8_t ucDelIndex    = ZERO_INITIALIZATION;
+        bool lReturnFlag      = true;
+        bool lNameFound       = false;
+        student ststudentInfoTable[ucCount];
+        if (pucName != NULL || *pucName != '\0')
+        {
+            uiPucNamelen = strlen((const char*)pucName);
+            for (; ucIndex < ucCount; ucIndex++)
+            {
+                if (strncmp((const char*)ststudentInfoTable[ucIndex].cName, 
+                    (const char*)pucName, uiPucNamelen)==ZERO_INITIALIZATION)
+                    {
+                        lNameFound = true;
+                        for (ucDelIndex = ucIndex; ucDelIndex < ucCount; 
+                            ucDelIndex++)
+                        {
+                            ststudentInfoTable[ucDelIndex] = 
+                                ststudentInfoTable[ucDelIndex + 1];
+                        }
+                        ucCount--;
+                        break;
+                    }
+            }
+            if (!lNameFound)
+            {
+                printf ("Name not found\n");
+                lReturnFlag = false;
+            }           
+        }
+        else
+        {
+            lReturnFlag = false;
+        }
+        return lReturnFlag;
     }
 /*******************************************************************************
 * 
@@ -244,6 +408,7 @@ bool  studentDeleteByRoll
     uint32_t ulRoll
     )
     {
+        
         return true;
     }
 /*******************************************************************************
@@ -268,5 +433,6 @@ bool studentDeleteAll
     void
     )
     {
+        (void)printf("inside delte all\n");
         return true;
     }

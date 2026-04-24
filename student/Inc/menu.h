@@ -26,14 +26,14 @@ typedef enum
         STD_ADD,
         STD_LIST,
         STD_DELETE,
+        STD_EXIT,
         STD_SRCH_NAME,
         STD_SRT_NAME,
         STD_SRT_ROLL,
         STD_SRT_RANK,
         STD_DLT_NAME,
         STD_DLT_ROLL,
-        STD_DLT_ALL,
-        STD_EXIT
+        STD_DLT_ALL    
     }STD_OPTION;
     
 typedef struct
@@ -41,7 +41,7 @@ typedef struct
     STD_OPTION eStdOptn;
     bool (*pMenuFucnHandler) (void);
 }StudentMenu;
-
+#define DLT_OFFSET  (10)
 
 bool menuMain(void);
 static bool menuStudentOverview(void);
@@ -62,6 +62,7 @@ StudentMenu pstStudentMenu[STD_DLT_ALL] =
         {STD_ADD, menuAddStudent},
         {STD_LIST, menuListStudent},
         {STD_DELETE, menuDeleteStudent},
+        {STD_EXIT, NULL},
         {STD_SRCH_NAME,menuListSearchByName},
         {STD_SRT_NAME, menuListSortByName},
         {STD_SRT_ROLL, menuListSortByRoll},

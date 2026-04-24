@@ -18,6 +18,7 @@
 #define STD_NAME_SIZE       (50)
 #define TOTAL_SUB           (10)
 #define ZERO_INITIALIZATION (0) 
+#define RANK_ONE            (1)
 typedef struct 
 {
     char cName[STD_NAME_SIZE];

@@ -80,7 +80,7 @@ static uint8_t menuGetUserChoice
 * ERRNO: N/A
 *
 */
-bool menuInputString(char *dest, size_t size, const char *src)
+bool menuInputString(uint8_t *dest, size_t size, const char *src)
 {
     bool lReturnFlag = true;
     if (dest == NULL || size == 0)
@@ -89,13 +89,13 @@ bool menuInputString(char *dest, size_t size, const char *src)
     }
     else
     {
-        if (fgets (dest, size, stdin) == NULL)
+        if (fgets ((char*)dest, size, stdin) == NULL)
         {
             (void)printf("Unable to input string\n");
             lReturnFlag = false;
         }
     }
-    return true;
+    return lReturnFlag;
 }
 
 /*******************************************************************************
@@ -124,16 +124,18 @@ bool menuMain
         (void)printf("Enter the option:\n");
         uint8_t ucInpNum = ZERO_INITIALIZATION;
         uint8_t ucIndex  = ZERO_INITIALIZATION;
+        bool lReturnFlag = true;
         do
         {
-            printf("1. Student Overview\n2. Add Student\n3. List Student\n");
-            printf(" 4. Delete Student\n5. Search Student by name\n");
-            printf("6. Sort by name\n");
-            printf("7. Sort by roll number\n8. Sort by Rank\n");   
-            printf("9. Delete by name\n");  
-            printf("10. Delete by rollno.\n11. Delete All\n 12. Exit\n");
+            (void)printf("1. Student Overview\n2. Add Student\n");
+            (void)printf("3. List Student\n4. Delete Student\n5. Exit\n");
             ucInpNum = menuGetUserChoice();
-            for ( ; ucIndex < STD_DELETE; ucIndex++)
+            if (ucInpNum< STD_OVERVIEW || ucInpNum > STD_EXIT)
+            {
+                (void)printf("Invalid option\n");
+                lReturnFlag = false;
+            }
+            for (ucIndex = ZERO_INITIALIZATION; ucIndex < STD_DELETE; ucIndex++)
             {
                 if (ucInpNum == pstStudentMenu[ucIndex].eStdOptn)
                 {
@@ -141,7 +143,7 @@ bool menuMain
                 }   
             }
         }while (STD_EXIT != ucInpNum);
-        //printf("error\n");  
+        return lReturnFlag;
     }
 /*******************************************************************************
 * 
@@ -165,6 +167,7 @@ static bool menuStudentOverview
     void
     )
     {
+        printf("Inside student overview\n");
         uint8_t ucIndex     = ZERO_INITIALIZATION;
         uint32_t uiTotalSum = ZERO_INITIALIZATION;
         float fAvgTotal     = ZERO_INITIALIZATION;
@@ -214,7 +217,7 @@ static bool menuAddStudent
         bool lReturnFlag = true;
         uint32_t ucIndex  = ZERO_INITIALIZATION;
         (void)printf("Enter Name:\n");
-        lReturnFlag = menuInputString(stStudent->cName, STD_NAME_SIZE, 
+        lReturnFlag = menuInputString((uint8_t*)stStudent->cName, STD_NAME_SIZE, 
             "Enter name:");
         stStudent->uiRoll = menuGetUserChoice();
         stStudent->cStdAddr = (char *)malloc(strlen(cBuffer)+1);
@@ -313,8 +316,8 @@ static bool menuDeleteStudent
         (void)printf("DELETE STUDENT MENU\n");
         (void)printf("1. Delete by name\n2. Delete by Roll no:");
         (void)printf("\n3. Delete all\n");
-        uiInpNum = menuGetUserChoice();
-        if(uiInpNum < STD_DLT_NAME && uiInpNum > STD_DLT_ALL)
+        uiInpNum = menuGetUserChoice() +  DLT_OFFSET;
+        if(uiInpNum < STD_DLT_NAME || uiInpNum > STD_DLT_ALL)
         {
             (void)printf("Choice out of range\n");
             lReturnFlag = false;
@@ -353,14 +356,14 @@ static bool menuListSearchByName
     {
         bool lReturnFlag = true;
         uint32_t ucIndex = ZERO_INITIALIZATION;
-        char cInpName[STD_NAME_SIZE];
+        uint8_t cInpName[STD_NAME_SIZE];
         uint8_t uiStrcmp   = ZERO_INITIALIZATION;
         student stStudent[ucCount];
         lReturnFlag = menuInputString(cInpName, sizeof(cInpName),"Enter name:");
         for(; ucIndex<ucCount; ucIndex++)
         {
-            uiStrcmp = strncmp(stStudent[ucIndex].cName, cInpName, 
-                (strlen(cInpName)+1));
+            uiStrcmp = strncmp(stStudent[ucIndex].cName, (const char*)cInpName, 
+                (strlen((const char*)cInpName)+1));
             if (uiStrcmp == ZERO_INITIALIZATION)
             {
                 (void)printf("%s\n",stStudent[ucIndex].cName);
@@ -428,7 +431,8 @@ static bool menuListSortByName
                     }  
                 }
             }
-            for(ucOutIndex=ZERO_INITIALIZATION; ucOutIndex < ucCount;ucOutIndex)
+            for(ucOutIndex=ZERO_INITIALIZATION; ucOutIndex < ucCount;
+                ucOutIndex++)
             {
                 (void)printf("%s\nRoll: %d\nRank: %d\n",
                     stStudent[ucOutIndex].cName,
@@ -463,7 +467,6 @@ bool menuListSortByRoll
     {
         bool lReturnFlag = true;
         uint32_t ucOutIndex = ZERO_INITIALIZATION;
-        uint8_t uiStrcmp   = ZERO_INITIALIZATION;
         uint32_t ucInIndex = ucOutIndex + 1;
         student stStudent[ucCount];
         if(ucCount == ZERO_INITIALIZATION)
@@ -488,7 +491,8 @@ bool menuListSortByRoll
                     }  
                 }
             }
-            for(ucOutIndex=ZERO_INITIALIZATION; ucOutIndex < ucCount;ucOutIndex)
+            for(ucOutIndex=ZERO_INITIALIZATION; ucOutIndex < ucCount;
+                ucOutIndex++)
             {
                 (void)printf("%s\nRoll: %d\nRank: %d\n",
                     stStudent[ucOutIndex].cName,
@@ -522,7 +526,6 @@ bool menuListSortByRank
     {
         bool lReturnFlag = true;
         uint32_t ucOutIndex = ZERO_INITIALIZATION;
-        uint8_t uiStrcmp   = ZERO_INITIALIZATION;
         uint32_t ucInIndex = ucOutIndex + 1;
         student stStudent[ucCount];
         if(ucCount == ZERO_INITIALIZATION)
@@ -547,7 +550,8 @@ bool menuListSortByRank
                     }  
                 }
             }
-            for(ucOutIndex=ZERO_INITIALIZATION; ucOutIndex < ucCount;ucOutIndex)
+            for(ucOutIndex=ZERO_INITIALIZATION; ucOutIndex < ucCount;
+                ucOutIndex++)
             {
                 (void)printf("%s\nRoll: %d\nRank: %d\n",
                     stStudent[ucOutIndex].cName,
@@ -582,8 +586,8 @@ bool menuDeleteByName
     )
     {
         bool lReturnFlag = true;
-        char cInpName[STD_NAME_SIZE];
-        lReturnFlag = menuInputString(cInpName,STD_NAME_SIZE,"Enter name");
+        uint8_t cInpName[STD_NAME_SIZE];
+        lReturnFlag = menuInputString(cInpName, STD_NAME_SIZE, "Enter name");
         if (lReturnFlag == true)
         {
             lReturnFlag = studentDeleteByName(cInpName);
@@ -664,9 +668,17 @@ bool menuDeleteAll
     )
     {
         bool lReturnFlag = true;
-        uint32_t ucIndex = ZERO_INITIALIZATION;
-        student stStudent[ucCount];
-        if (ucCount == ZERO_INITIALIZATION)
+        lReturnFlag = studentDeleteAll();
+        if (lReturnFlag == true)
+        {
+            (void)printf("Deleted all student record\n");
+        }
+        else
+        {
+            (void)printf("Unable to delete all students record\n");
+        }
+        return lReturnFlag;
+        /*if (ucCount == ZERO_INITIALIZATION)
         {
             (void)printf("No students record\n");
         }
@@ -678,9 +690,6 @@ bool menuDeleteAll
                 stStudent[ucIndex].cStdAddr = NULL;
             }
             
-        }
-        
-        
-
+        }*/
     }
 
