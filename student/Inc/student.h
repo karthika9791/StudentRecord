@@ -1,26 +1,14 @@
-//************************** Student Record System *****************************
-//  Copyright (c) 2026 Trenser Technology Solutions 
-//  All Rights Reserved 
-//****************************************************************************** 
-// 
-// Summary : Header file with function prototypes for student operations.
-// Note    : This module provides utilities to perform various student functions
-//           including add, delete and sort student.
-//
-//****************************************************************************** 
-#ifndef _INCstudenth
-#define _INCstudenth
+#ifndef INC_STUDENT_H
+#define INC_STUDENT_H
 
 #include <stdint.h>
-#include <stdlib.h>
 #include <stdbool.h>
-#include <string.h>
-#include <stdio.h>
 
 #define STUDENT_NAME_SIZE   (50)
 #define TOTAL_SUB           (10)
-#define ZERO_INITIALIZATION (0) 
+#define ZERO_INITIALIZATION (0)
 #define RANK_ONE            (1)
+#define MAX_STUDENTS        (100)
 
 typedef struct 
 {
@@ -32,20 +20,19 @@ typedef struct
     float fStdAvg;
     uint8_t ucGrade[TOTAL_SUB];
     uint32_t uiRank;
-}student;
+} student;
 
-extern uint32_t ucCount;
+/* GLOBAL DATA (DEFINED ONLY IN student.c) */
+extern student stStudent[MAX_STUDENTS];
+extern uint32_t uistudentCount;
 
-bool studentAdd (student* pstInfo);
-bool studentCalcAverage (student* pstInfo, float* pfAvg);
-bool studentCalcSum (student* pstInfo, uint32_t* pulSum);
-bool studentCalcGrades (student* pstInfo, uint8_t* pucSum);
-bool studentUpdateRank (void);
-bool studentGetCount (uint32_t* pulCount);
-bool studentGetAvgMarksOfSubjects (uint8_t* pucAvgMarks);
-bool studentDeleteByName (uint8_t* pucName);
-bool studentDeleteByRoll (uint32_t ulRoll);
-bool studentDeleteAll (void);
+/* APIs */
+bool studentCalcSum(student* pstInfo, uint32_t* pulSum);
+bool studentCalcAverage(student* pstInfo, float* pfAvg);
+bool studentCalcGrades(student* pstInfo, uint8_t* pucGrade);
+
+bool studentDeleteByName(uint8_t* pucName);
+bool studentDeleteByRoll(uint32_t ulRoll);
+bool studentDeleteAll(void);
 
 #endif
-
